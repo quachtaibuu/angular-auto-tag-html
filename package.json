@@ -1,0 +1,39 @@
+{
+	"publisher": "paulbuu",
+	"name": "auto-tag-html-i18n",
+	"displayName": "auto-tag-html-i18n",
+	"description": "Auto add i18n tag to label, span, button, input...",
+	"version": "0.0.3",
+	"engines": {
+		"vscode": "^1.33.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [
+		"*"
+	],
+	"main": "./out/extension.js",
+	"contributes": {
+		"commands": [
+			{
+				"command": "extension.autoAppendTagHTMLi18n",
+				"title": "eTMS Auto Append i18n Tag For HTML"
+			}
+		]
+	},
+	"scripts": {
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -p ./",
+		"watch": "tsc -watch -p ./",
+		"postinstall": "node ./node_modules/vscode/bin/install",
+		"test": "npm run compile && node ./node_modules/vscode/bin/test"
+	},
+	"devDependencies": {
+		"typescript": "^3.3.1",
+		"vscode": "^1.1.28",
+		"tslint": "^5.12.1",
+		"@types/node": "^10.12.21",
+		"@types/mocha": "^2.2.42"
+	}
+}
