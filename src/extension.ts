@@ -10,6 +10,16 @@ export function activate(context: vscode.ExtensionContext) {
 	// This line of code will only be executed once when your extension is activated
 	console.log('Congratulations, your extension "auto-tag-html-i18n" is now active!');
 
+	const i18nRegExpControl: RegExp = /<(a|b|h\d|div|button|label|span|strong|th[^ead]|ng*)[.|\s\w\W|\d]*?(i18n)-?(placeholder|title|label)?([^>]+)?>(.*?)<?([^>]+)?>?/gm;
+			//for recheck type of i18n
+	const i18nOnlyRegExp: RegExp = /(i18n)([^-^=]+)/gm;
+	const i18nRegExp: RegExp = /(i18n)-(placeholder|title|label)([^=]+)/gm;
+	const i18nRegExpAuto:RegExp = /(placeholder|title|label)=("|')(.*?)("|')([^>]+)>/gm;
+	//for text inside tag. Ex: <button>abc</button>
+	const ctrlWithClosedTagRegExp: RegExp = /<(a|b|h\d|div|button|label|span|strong|th)\s([^>]+)>(.*?)<([^>]+)>/gsm;
+	//for text on placeholder or title. Ex: <button title='abc'></button>
+	const ctrlWithoutClosedTagRegExp: RegExp = /<(a|button|input|img|ng[x]?.*?)\s([^>]*)(title|placeholder|label)=("|')(.*?)("|')([^>]+)>/gm;
+
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with registerCommand
 	// The commandId parameter must match the command field in package.json
@@ -39,67 +49,15 @@ export function activate(context: vscode.ExtensionContext) {
 
 			var html = document.getText(textRange);
 			//get all control include i18n tag
-			const i18nRegExpControl: RegExp = /<(a|button|label|span|strong|th[^ead]|input|ng*).*?(i18n)-?(placeholder|title)?([^>]+)?>(.*?)<?([^>]+)?>?/gm;
-			//for recheck type of i18n
-			const i18nOnlyRegExp: RegExp = /(i18n)([^-^=]+)/gm;
-			const i18nRegExp: RegExp = /(i18n)-(placeholder|title)([^=]+)/gm;
-			//for text inside tag. Ex: <button>abc</button>
-			const ctrlWithClosedTagRegExp: RegExp = /<(a|button|label|span|strong|th)\s([^>]+)>(.*?)<([^>]+)>/gsm;
-			//for text on placeholder or title. Ex: <button title='abc'></button>
-			const ctrlWithoutClosedTagRegExp: RegExp = /<(a|button|input|ng[x]?.*?)\s([^>]+)(title|placeholder)=("|')(.*?)("|')([^>]+)>/gsm;
-
+			
 			var matches: any = html.match(i18nRegExpControl);
-			var iTry = 1;
-			var iMaxTry = 5;
+			
 			if (matches !== null) {
-				for (let i = 0; i < matches.length; i++) {
-
-					if(iTry === iMaxTry) {
-						iTry = 1;
-						continue;
-					}
-
-					let i18nHTMLControlTag = matches[i];
-					let i18Tag = i18nHTMLControlTag.match(i18nOnlyRegExp);
-					let tagRegex = i18nOnlyRegExp.exec(i18nHTMLControlTag);
-					var i18nId: string = '';
-
-					if (i18Tag !== null && tagRegex !== null) {
-						i18Tag = tagRegex[1];
-						i18nId = `@@${strId}`;
-						let mCtrl = ctrlWithClosedTagRegExp.exec(i18nHTMLControlTag);
-						if (mCtrl !== null) {
-							i18nId = `${i18nId}.${toCamelCase(mCtrl[1])}.${toCamelCase(mCtrl[3])}`;
-							iTry = 1;
-						}else {
-							iTry++;
-							i--;
-							continue;
-						}
-					} else {
-						i18Tag = i18nHTMLControlTag.match(i18nRegExp);
-						tagRegex = i18nRegExp.exec(i18nHTMLControlTag);
-
-						if (i18Tag !== null && tagRegex !== null) {							
-							i18Tag = `${tagRegex[1]}-${tagRegex[2]}`;
-							i18nId = `@@${strId}`;
-							let mCtrl = ctrlWithoutClosedTagRegExp.exec(i18nHTMLControlTag);
-							if (mCtrl !== null) {
-								i18nId = `${i18nId}.${toCamelCase(mCtrl[1])}.${toCamelCase(mCtrl[3])}.${toCamelCase(mCtrl[5])}`;
-								iTry = 1;
-							}else {
-								iTry++;
-								i--;
-								continue;
-							}
-						}
-					}
-
-					if (i18nId !== `@@${strId}` && i18nId !== '') {
-						i18nHTMLControlTag = i18nHTMLControlTag.replace(i18Tag, `${i18Tag}="${i18nId}"`);
-						html = html.replace(matches[i], i18nHTMLControlTag);
-					}
-				}
+				html=InsertI18n(matches,strId,html);
+			}
+			var matchesWithoutClosedtag=html.match(ctrlWithoutClosedTagRegExp);
+			if(matchesWithoutClosedtag !== null){
+				html=InsertI18n(matchesWithoutClosedtag,strId,html);
 			}
 
 
@@ -113,6 +71,69 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 
 	context.subscriptions.push(disposable);
+	function InsertI18n(matches:any[],strId:string,html:string){
+		var iTry = 1;
+		var iMaxTry = 5;
+		for (let i = 0; i < matches.length; i++) {
+			
+			if(iTry === iMaxTry) {
+				iTry = 1;
+				continue;
+			}
+	
+			let i18nHTMLControlTag = matches[i];
+			let i18Tag = i18nHTMLControlTag.match(i18nOnlyRegExp);
+			let tagRegex = i18nOnlyRegExp.exec(i18nHTMLControlTag);
+			var i18nId: string = '';
+	
+			if (i18Tag !== null && tagRegex !== null) {
+				i18Tag = tagRegex[1];
+				i18nId = `@@${strId}`;
+				let mCtrl = ctrlWithClosedTagRegExp.exec(i18nHTMLControlTag);
+				if (mCtrl !== null) {
+					i18nId = `${i18nId}.${toCamelCase(mCtrl[1])}.${toCamelCase(mCtrl[3])}`;
+					iTry = 1;
+				}else {
+					iTry++;
+					i--;
+					continue;
+				}
+			} else {
+				i18Tag = i18nHTMLControlTag.match(i18nRegExp);
+				tagRegex = i18nRegExp.exec(i18nHTMLControlTag);
+	
+				if (i18Tag !== null && tagRegex !== null) {							
+					i18Tag = `${tagRegex[1]}-${tagRegex[2]}`;
+					i18nId = `@@${strId}`;
+					let mCtrl = ctrlWithoutClosedTagRegExp.exec(i18nHTMLControlTag);
+					if (mCtrl !== null) {
+						i18nId = `${i18nId}.${toCamelCase(mCtrl[1])}.${toCamelCase(mCtrl[3])}.${toCamelCase(mCtrl[5])}`;
+						iTry = 1;
+					}else {
+						iTry++;
+						i--;
+						continue;
+					}
+				}
+				else{
+					let auto = i18nRegExpAuto.exec(i18nHTMLControlTag);
+					let i18n=/(i18n)([^-^=]+)?/gm.exec(i18nHTMLControlTag);
+					if(auto !== null && i18n === null){
+						
+						i18Tag=`i18n-${auto[1]} ${auto[1]}`;
+						let newtag=matches[i].replace(auto[1],i18Tag);
+						html=html.replace(matches[i],newtag);
+					}
+				}
+			}
+	
+			if (i18nId !== `@@${strId}` && i18nId !== '') {
+				i18nHTMLControlTag = i18nHTMLControlTag.replace(i18Tag, `${i18Tag}="${i18nId}"`);
+				html = html.replace(matches[i], i18nHTMLControlTag);
+			}
+		}
+		return html;
+	}
 }
 
 // this method is called when your extension is deactivated
