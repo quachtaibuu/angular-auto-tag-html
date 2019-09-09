@@ -9,13 +9,13 @@ function activate(context) {
     // Use the console to output diagnostic information (console.log) and errors (console.error)
     // This line of code will only be executed once when your extension is activated
     console.log('Congratulations, your extension "auto-tag-html-i18n" is now active!');
-    const i18nRegExpControl = /<(a|b|h\d|div|button|label|span|strong|th[^ead]|ng*)[.|\s\w\W|\d]*?(i18n)-?(placeholder|title|label)?([^>]+)?>(.*?)<?([^>]+)?>?/gm;
+    const i18nRegExpControl = /<(a|b|h\d|button|label|span|strong|th[^ead]|ng*)[.|\s\w\W|\d]*?(i18n)-?(placeholder|title|label)?([^>]+)?>(.*?)<?([^>]+)?>?/gm;
     //for recheck type of i18n
     const i18nOnlyRegExp = /(i18n)([^-^=]+)/gm;
     const i18nRegExp = /(i18n)-(placeholder|title|label)([^=]+)/gm;
     const i18nRegExpAuto = /(placeholder|title|label)=("|')(.*?)("|')([^>]+)>/gm;
     //for text inside tag. Ex: <button>abc</button>
-    const ctrlWithClosedTagRegExp = /<(a|b|h\d|div|button|label|span|strong|th)\s([^>]+)>(.*?)<([^>]+)>/gsm;
+    const ctrlWithClosedTagRegExp = /<(a|b|h\d|button|label|span|strong|th)\s([^>]+)>(.*?)<([^>]+)>/gsm;
     //for text on placeholder or title. Ex: <button title='abc'></button>
     const ctrlWithoutClosedTagRegExp = /<(a|button|input|img|ng[x]?.*?)\s([^>]*)(title|placeholder|label)=("|')(.*?)("|')([^>]+)>/gm;
     // The command has been defined in the package.json file
