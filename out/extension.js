@@ -147,9 +147,19 @@ exports.onlyWorld = onlyWorld;
 const LIST_KEY_I18N = ['placeholder', 'title', 'label'];
 function splitHTML(html, idRoot) {
     const cheerio = require('cheerio');
-    const htmlparser2 = require('htmlparser2');
-    const dom = htmlparser2.parseDOM(html);
-    const $ = cheerio.load(dom);
+    // const htmlparser2 = require('htmlparser2');
+    // const dom = htmlparser2.parseDOM(html,{
+    // 	lowerCaseAttributesNames: false,
+    // });
+    const $ = cheerio.load(html, {
+        xml: {
+            //decodeEntities: true, 
+            lowerCaseAttributeNames: false
+        },
+        decodeEntities: false,
+        normalizeWhitespace: true,
+        withDomLvl1: false,
+    });
     $(`[i18n]`).each(function (index, element) {
         let id = $(element).attr('i18n');
         let tagName = element.tagName;

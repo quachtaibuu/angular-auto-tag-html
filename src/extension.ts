@@ -163,10 +163,21 @@ export function onlyWorld(text: string) {
 const LIST_KEY_I18N = ['placeholder', 'title', 'label']
 export function splitHTML(html: string, idRoot: string) {
 	const cheerio = require('cheerio');
-	const htmlparser2 = require('htmlparser2');
-	const dom = htmlparser2.parseDOM(html);
+	// const htmlparser2 = require('htmlparser2');
+	// const dom = htmlparser2.parseDOM(html,{
+	// 	lowerCaseAttributesNames: false,
+	// });
 
-	const $ = cheerio.load(dom);
+	const $ = cheerio.load(html,{ 
+		xml: { 
+			//decodeEntities: true, 
+			lowerCaseAttributeNames: false 
+			
+		} ,
+		decodeEntities: false,
+		normalizeWhitespace: true,
+		withDomLvl1: false,
+	});
 	$(`[i18n]`).each(function (index: any, element: any) {
 		let id = $(element).attr('i18n');
 		let tagName = element.tagName;
