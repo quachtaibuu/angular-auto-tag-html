@@ -45,7 +45,8 @@ function activate(context) {
             html = splitHTML(html, strId);
             html = html
                 .replace(/&amp;amp;apos;/g, "'")
-                .replace(/&amp;apos;/g, "'");
+                .replace(/&amp;apos;/g, "'")
+                .replace(/&apos;/g, "'");
             // var matches: any = html.match(i18nRegExpControl);
             // if (matches !== null) {
             // 	html = InsertI18n(matches, strId, html);

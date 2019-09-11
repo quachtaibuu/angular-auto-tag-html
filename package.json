@@ -3,7 +3,7 @@
 	"name": "auto-tag-html-i18n",
 	"displayName": "auto-tag-html-i18n",
 	"description": "Auto add i18n tag to label, span, button, input...",
-	"version": "0.0.6",
+	"version": "0.1.0",
 	"engines": {
 		"vscode": "^1.32.3"
 	},

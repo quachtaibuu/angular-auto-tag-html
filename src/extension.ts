@@ -52,6 +52,7 @@ export function activate(context: vscode.ExtensionContext) {
 			html=html
 			.replace(/&amp;amp;apos;/g,"'")
 			.replace(/&amp;apos;/g,"'")
+			.replace(/&apos;/g,"'")
 			// var matches: any = html.match(i18nRegExpControl);
 
 			// if (matches !== null) {
