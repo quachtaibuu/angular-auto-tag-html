@@ -164,21 +164,21 @@ function splitHTML(html, idRoot) {
             $(element).attr('i18n', `@@${strId}`);
         }
     });
-    LIST_KEY_I18N.forEach(i => {
+    LIST_KEY_I18N.forEach(i18nEx => {
         //Add i18n-*
-        $(`[${i}]`).each(function (index, element) {
-            let id = $(element).attr(`i18n-${i}`);
+        $(`[${i18nEx}]`).each(function (index, element) {
+            let id = $(element).attr(`i18n-${i18nEx}`);
             if (id === undefined) {
-                $(element).attr(`i18n-${i}`, '');
+                $(element).attr(`i18n-${i18nEx}`, '');
             }
         });
-        $(`[i18n-${i}]`).each(function (index, element) {
-            let id = $(element).attr(`i18n-${i}`);
+        $(`[i18n-${i18nEx}]`).each(function (index, element) {
+            let id = $(element).attr(`i18n-${i18nEx}`);
             let tagName = element.tagName;
-            let text = $(element).attr(i);
+            let text = $(element).attr(i18nEx);
             if (id == "") {
-                let strId = `${idRoot}.${toCamelCase(tagName)}.${toCamelCase(text)}`;
-                $(element).attr(`i18n-${i}`, `@@${strId}`);
+                let strId = `${idRoot}.${toCamelCase(tagName)}.${i18nEx}.${toCamelCase(text)}`;
+                $(element).attr(`i18n-${i18nEx}`, `@@${strId}`);
             }
         });
     });
