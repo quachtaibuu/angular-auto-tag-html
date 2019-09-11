@@ -51,9 +51,9 @@ export function activate(context: vscode.ExtensionContext) {
 			//get all control include i18n tag
 			html = splitHTML(html, strId);
 			html=html
-			.replace(/&amp;amp;apos;/g,"'")
-			.replace(/&amp;apos;/g,"'")
-			.replace(/&apos;/g,"'")
+			// .replace(/&amp;amp;apos;/g,"'")
+			// .replace(/&amp;apos;/g,"'")
+			// .replace(/&apos;/g,"'")
 			// var matches: any = html.match(i18nRegExpControl);
 
 			// if (matches !== null) {
@@ -165,10 +165,13 @@ const LIST_KEY_I18N = ['placeholder', 'title', 'label']
 export function splitHTML(html: string, idRoot: string) {
 	const cheerio = require('cheerio');
 	const dom = parseDOM(html, <ParserOptions>{
-		lowerCaseAttributeNames:false
+		lowerCaseAttributeNames:false,
+		decodeEntities:false
 	});
 
-	const $ = cheerio.load(dom);
+	const $ = cheerio.load(dom,{
+		decodeEntities: false
+	});
 	$(`[i18n]`).each(function (index: any, element: any) {
 		let id = $(element).attr('i18n');
 		let tagName = element.tagName;
