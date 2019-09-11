@@ -1,6 +1,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import { parseDOM,ParserOptions } from 'htmlparser2'
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -163,21 +164,11 @@ export function onlyWorld(text: string) {
 const LIST_KEY_I18N = ['placeholder', 'title', 'label']
 export function splitHTML(html: string, idRoot: string) {
 	const cheerio = require('cheerio');
-	// const htmlparser2 = require('htmlparser2');
-	// const dom = htmlparser2.parseDOM(html,{
-	// 	lowerCaseAttributesNames: false,
-	// });
-
-	const $ = cheerio.load(html,{ 
-		xml: { 
-			//decodeEntities: true, 
-			lowerCaseAttributeNames: false 
-			
-		} ,
-		decodeEntities: false,
-		normalizeWhitespace: true,
-		withDomLvl1: false,
+	const dom = parseDOM(html, <ParserOptions>{
+		lowerCaseAttributeNames:false
 	});
+
+	const $ = cheerio.load(dom);
 	$(`[i18n]`).each(function (index: any, element: any) {
 		let id = $(element).attr('i18n');
 		let tagName = element.tagName;
