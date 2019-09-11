@@ -158,7 +158,7 @@ function splitHTML(html, idRoot) {
         let text = $(element).text();
         if (id == "") {
             let strId = `${idRoot}.${toCamelCase(tagName)}.${toCamelCase(text)}`;
-            $(element).attr('i18n', strId);
+            $(element).attr('i18n', `@@${strId}`);
         }
     });
     LIST_KEY_I18N.forEach(i => {
@@ -175,7 +175,7 @@ function splitHTML(html, idRoot) {
             let text = $(element).attr(i);
             if (id == "") {
                 let strId = `${idRoot}.${toCamelCase(tagName)}.${toCamelCase(text)}`;
-                $(element).attr(`i18n-${i}`, strId);
+                $(element).attr(`i18n-${i}`, `@@${strId}`);
             }
         });
     });
