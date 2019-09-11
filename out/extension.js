@@ -15,7 +15,7 @@ function activate(context) {
     const i18nRegExp = /(i18n)-(placeholder|title|label)([^=]+)/gm;
     const i18nRegExpAuto = /(placeholder|title|label)=("|')(.*?)("|')([^>]+)>/gm;
     //for text inside tag. Ex: <button>abc</button>
-    const ctrlWithClosedTagRegExp = /<(a|b|h\d|button|label|span|strong|th)\s([^>]+)>(.*?)<([^>]+)>/gsm;
+    const ctrlWithClosedTagRegExp = /<(a|b|h\d|button|label|span|strong|th)\s([^>]+)>(.*?)<([^>]+)>/gm;
     //for text on placeholder or title. Ex: <button title='abc'></button>
     const ctrlWithoutClosedTagRegExp = /<(a|button|input|img|ng[x]?.*?)\s([^>]*)(title|placeholder|label)=("|')(.*?)("|')([^>]+)>/gm;
     // The command has been defined in the package.json file
@@ -42,14 +42,18 @@ function activate(context) {
             let textRange = new vscode.Range(0, firstLine.range.start.character, document.lineCount - 1, lastLine.range.end.character);
             var html = document.getText(textRange);
             //get all control include i18n tag
-            var matches = html.match(i18nRegExpControl);
-            if (matches !== null) {
-                html = InsertI18n(matches, strId, html);
-            }
-            var matchesWithoutClosedtag = html.match(ctrlWithoutClosedTagRegExp);
-            if (matchesWithoutClosedtag !== null) {
-                html = InsertI18n(matchesWithoutClosedtag, strId, html);
-            }
+            html = splitHTML(html, strId);
+            html = html
+                .replace(/&amp;amp;apos;/g, "'")
+                .replace(/&amp;apos;/g, "'");
+            // var matches: any = html.match(i18nRegExpControl);
+            // if (matches !== null) {
+            // 	html = InsertI18n(matches, strId, html);
+            // }
+            // var matchesWithoutClosedtag = html.match(ctrlWithoutClosedTagRegExp);
+            // if (matchesWithoutClosedtag !== null) {
+            // 	html = InsertI18n(matchesWithoutClosedtag, strId, html);
+            // }
             textEditor.edit(function (editBuilder) {
                 editBuilder.replace(textRange, html);
             });
@@ -59,62 +63,51 @@ function activate(context) {
     });
     context.subscriptions.push(disposable);
     function InsertI18n(matches, strId, html) {
-        var iTry = 1;
-        var iMaxTry = 5;
         for (let i = 0; i < matches.length; i++) {
-            if (iTry === iMaxTry) {
-                iTry = 1;
-                continue;
-            }
             let i18nHTMLControlTag = matches[i];
             let i18Tag = i18nHTMLControlTag.match(i18nOnlyRegExp);
             let tagRegex = i18nOnlyRegExp.exec(i18nHTMLControlTag);
             var i18nId = '';
+            i18Tag = i18nHTMLControlTag.match(i18nRegExp);
+            tagRegex = i18nRegExp.exec(i18nHTMLControlTag);
+            // I18n - Placeholder
+            if (i18Tag !== null && tagRegex !== null) {
+                i18Tag = `${tagRegex[1]}-${tagRegex[2]}`;
+                i18nId = `@@${strId}`;
+                let mCtrl = ctrlWithoutClosedTagRegExp.exec(i18nHTMLControlTag);
+                if (mCtrl !== null) {
+                    i18nId = `${i18nId}.${toCamelCase(mCtrl[1])}.${toCamelCase(mCtrl[3])}.${toCamelCase(mCtrl[5])}`;
+                    html = WriteToHTML(i18nId, strId, i18Tag, i18nHTMLControlTag, matches[i], html);
+                }
+            }
+            // Auto Add i18n-placeholder , title , label 
+            let auto = i18nRegExpAuto.exec(i18nHTMLControlTag);
+            let i18n = /(i18n)-([a-z]*)?/gm.exec(i18nHTMLControlTag);
+            if (auto !== null && (i18n == null || (i18n[2] !== null && i18n[2] != auto[1]))) {
+                i18Tag = `i18n-${auto[1]} ${auto[1]}`;
+                let newtag = matches[i].replace(auto[1], i18Tag);
+                html = html.replace(matches[i], newtag);
+                html = WriteToHTML(i18nId, strId, i18Tag, i18nHTMLControlTag, matches[i], html);
+            }
+            // Add i18n Normal
+            i18Tag = i18nHTMLControlTag.match(i18nOnlyRegExp);
+            tagRegex = i18nOnlyRegExp.exec(i18nHTMLControlTag);
             if (i18Tag !== null && tagRegex !== null) {
                 i18Tag = tagRegex[1];
                 i18nId = `@@${strId}`;
                 let mCtrl = ctrlWithClosedTagRegExp.exec(i18nHTMLControlTag);
                 if (mCtrl !== null) {
                     i18nId = `${i18nId}.${toCamelCase(mCtrl[1])}.${toCamelCase(mCtrl[3])}`;
-                    iTry = 1;
-                }
-                else {
-                    iTry++;
-                    i--;
-                    continue;
+                    html = WriteToHTML(i18nId, strId, i18Tag, i18nHTMLControlTag, matches[i], html);
                 }
             }
-            else {
-                i18Tag = i18nHTMLControlTag.match(i18nRegExp);
-                tagRegex = i18nRegExp.exec(i18nHTMLControlTag);
-                if (i18Tag !== null && tagRegex !== null) {
-                    i18Tag = `${tagRegex[1]}-${tagRegex[2]}`;
-                    i18nId = `@@${strId}`;
-                    let mCtrl = ctrlWithoutClosedTagRegExp.exec(i18nHTMLControlTag);
-                    if (mCtrl !== null) {
-                        i18nId = `${i18nId}.${toCamelCase(mCtrl[1])}.${toCamelCase(mCtrl[3])}.${toCamelCase(mCtrl[5])}`;
-                        iTry = 1;
-                    }
-                    else {
-                        iTry++;
-                        i--;
-                        continue;
-                    }
-                }
-                else {
-                    let auto = i18nRegExpAuto.exec(i18nHTMLControlTag);
-                    let i18n = /(i18n)([^-^=]+)?/gm.exec(i18nHTMLControlTag);
-                    if (auto !== null && i18n === null) {
-                        i18Tag = `i18n-${auto[1]} ${auto[1]}`;
-                        let newtag = matches[i].replace(auto[1], i18Tag);
-                        html = html.replace(matches[i], newtag);
-                    }
-                }
-            }
-            if (i18nId !== `@@${strId}` && i18nId !== '') {
-                i18nHTMLControlTag = i18nHTMLControlTag.replace(i18Tag, `${i18Tag}="${i18nId}"`);
-                html = html.replace(matches[i], i18nHTMLControlTag);
-            }
+        }
+        return html;
+    }
+    function WriteToHTML(i18nId, strId, i18Tag, i18nHTMLControlTag, matche, html) {
+        if (i18nId !== `@@${strId}` && i18nId !== '') {
+            i18nHTMLControlTag = i18nHTMLControlTag.replace(i18Tag, `${i18Tag}="${i18nId}"`);
+            return html.replace(matche, i18nHTMLControlTag);
         }
         return html;
     }
@@ -150,4 +143,41 @@ function onlyWorld(text) {
     return '';
 }
 exports.onlyWorld = onlyWorld;
+const LIST_KEY_I18N = ['placeholder', 'title', 'label'];
+function splitHTML(html, idRoot) {
+    const cheerio = require('cheerio');
+    const htmlparser2 = require('htmlparser2');
+    const dom = htmlparser2.parseDOM(html);
+    const $ = cheerio.load(dom);
+    $(`[i18n]`).each(function (index, element) {
+        let id = $(element).attr('i18n');
+        let tagName = element.tagName;
+        let text = $(element).text();
+        if (id == "") {
+            let strId = `${idRoot}.${toCamelCase(tagName)}.${toCamelCase(text)}`;
+            $(element).attr('i18n', strId);
+        }
+    });
+    LIST_KEY_I18N.forEach(i => {
+        //Add i18n-*
+        $(`[${i}]`).each(function (index, element) {
+            let id = $(element).attr(`i18n-${i}`);
+            if (id === undefined) {
+                $(element).attr(`i18n-${i}`, '');
+            }
+        });
+        $(`[i18n-${i}]`).each(function (index, element) {
+            let id = $(element).attr(`i18n-${i}`);
+            let tagName = element.tagName;
+            let text = $(element).attr(i);
+            if (id == "") {
+                let strId = `${idRoot}.${toCamelCase(tagName)}.${toCamelCase(text)}`;
+                $(element).attr(`i18n-${i}`, strId);
+            }
+        });
+    });
+    //	var convert=findi18n(result,idRood)
+    return $.html();
+}
+exports.splitHTML = splitHTML;
 //# sourceMappingURL=extension.js.map
